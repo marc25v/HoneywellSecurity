@@ -8,6 +8,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <iomanip>
+#include <locale>
+#include <ctime>
 
 
 #define SYNC_MASK    0xFFFF000000000000ul
@@ -16,7 +19,6 @@
 void DigitalDecoder::sendDeviceState(uint32_t serial, deviceState_t ds)
 {
     std::ostringstream oss;
-
     //
     // Use mosquitto_pub to send device state to the MQTT server.
     //
@@ -32,8 +34,13 @@ void DigitalDecoder::sendDeviceState(uint32_t serial, deviceState_t ds)
     oss << "\"tamper\": " << (ds.tamper ? "true," : "false,");
     oss << "\"alarm\": " << (ds.alarm ? "true," : "false,");
     oss << "\"batteryLow\": " << (ds.batteryLow ? "true," : "false,");
-    oss << "\"lastUpdateTime\": " << ds.lastUpdateTime << ",";
-    oss << "\"lastAlarmTime\": " << ds.lastAlarmTime;
+    oss << "\"heartbeat\": " << (ds.heartbeat ? "true," : "false,");
+
+    time_t lastUpdateTime = (time_t)ds.lastUpdateTime;
+    oss << "\"lastUpdateTime\": " << std::put_time(std::localtime(&lastUpdateTime), "%c %Z") << ",";
+
+    time_t lastAlarmTime = (time_t)ds.lastAlarmTime;
+    oss << "\"lastAlarmTime\": " << std::put_time(std::localtime(&lastAlarmTime), "%c %Z") << ",";
     oss << "}'";
 
     std::cout << oss.str() << std::endl;
@@ -85,7 +92,13 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
     //
 
     ds.batteryLow = (state & 0x08);
-    
+
+    //
+    // Decode the heartbeat pulse.
+    //
+
+    ds.heartbeat = (state & 0x04);
+
     //
     // Timestamp.
     //
@@ -188,16 +201,31 @@ void DigitalDecoder::handlePayload(uint64_t payload)
 void DigitalDecoder::handleBit(bool value)
 {
     static uint64_t payload = 0;
-    
+
     payload <<= 1;
     payload |= (value ? 1 : 0);
     
+    //
+    // If we see a new pattern, but the previous payload wasn't complete.
+    //
+
+    if (((payload & 0xFFFEul) == 0xFFFEul) && (payload != 0xFFFEul))
+    {
+#ifdef __arm__
+        printf("Previous payload: %llX\n", payload >> 16);
+#else
+        printf("Previous payload: %lX\n", payload >> 16);
+#endif     
+    }
+
+#if 0
 #ifdef __arm__
     printf("Got bit: %d, payload is now %llX\n", value?1:0, payload);
 #else
     printf("Got bit: %d, payload is now %lX\n", value?1:0, payload);
 #endif     
-    
+#endif
+
     if((payload & SYNC_MASK) == SYNC_PATTERN)
     {
         handlePayload(payload);
