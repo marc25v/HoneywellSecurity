@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <fcntl.h>
@@ -12,54 +13,42 @@
 #define SYNC_MASK    0xFFFF000000000000ul
 #define SYNC_PATTERN 0xFFFE000000000000ul
 
-
-void DigitalDecoder::writeDeviceState()
+void DigitalDecoder::sendDeviceState(uint32_t serial, deviceState_t ds)
 {
-    std::ofstream file;
-    file.open("/var/www/html/deviceState.json");
-    
-    if(!file.is_open())
-    {
-        printf("Could not open JSON file\n");
-        return;
-    }
-    
-    bool isFirst = true;
-    
-    file << "[" << std::endl;
-    for(const auto &dd : deviceStateMap)
-    {
-        if(!isFirst) file << "," << std::endl;
-        isFirst = false;
-        
-        file << "{" << std::endl;
-        file << "    \"serial\": " << dd.first << "," << std::endl;
-        file << "    \"isMotion\": " << (dd.second.isMotionDetector ? "true," : "false,") << std::endl;
-        file << "    \"tamper\": " << (dd.second.tamper ? "true," : "false,") << std::endl;
-        file << "    \"alarm\": " << (dd.second.alarm ? "true," : "false,") << std::endl;
-        file << "    \"batteryLow\": " << (dd.second.batteryLow ? "true," : "false,") << std::endl;
-        file << "    \"lastUpdateTime\": " << dd.second.lastUpdateTime << "," << std::endl;
-        file << "    \"lastAlarmTime\": " << dd.second.lastAlarmTime << std::endl;
-        file << "}";
-    }
-    
-    file << std::endl << "]" << std::endl;
-    
-    file.close();
-}
+    std::ostringstream oss;
 
-#warning "Update the SmartThings endpoint here"
-void DigitalDecoder::sendDeviceState()
-{
-    printf("Sending Device State\n");
-    system("curl -H 'Authorization: Bearer 12345678-1234-1234-1234-1234567890ab' -H 'Content-Type: application/json' -X PUT -d '@/var/www/html/deviceState.json' https://graph.api.smartthings.com:443/api/smartapps/installations/12345678-1234-1234-1234-1234567890ab/event&");
+    //
+    // Use mosquitto_pub to send device state to the MQTT server.
+    //
+
+    oss << "/usr/bin/mosquitto_pub";
+    oss << " -h 172.30.32.1";
+    oss << " -i HoneywellSecurity -r -l";
+    oss << " -t 'homeassistant/sensor/honeywell/" << serial << "' ";
+    oss << " -m '";
+    oss << "{";
+    oss << "\"serial\": " << serial << ",";
+    oss << "\"isMotion\": " << (ds.isMotionDetector ? "true," : "false,");
+    oss << "\"tamper\": " << (ds.tamper ? "true," : "false,");
+    oss << "\"alarm\": " << (ds.alarm ? "true," : "false,");
+    oss << "\"batteryLow\": " << (ds.batteryLow ? "true," : "false,");
+    oss << "\"lastUpdateTime\": " << ds.lastUpdateTime << ",";
+    oss << "\"lastAlarmTime\": " << ds.lastAlarmTime;
+    oss << "}'";
+
+    std::cout << oss.str() << std::endl;
+
+    system(oss.str().c_str());
 }
 
 void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
 {
     deviceState_t ds;
     
-    // Extract prior info
+    //
+    // Extract prior information.
+    //
+
     if(deviceStateMap.count(serial))
     {
         ds = deviceStateMap[serial];
@@ -69,7 +58,10 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
         ds.isMotionDetector = false;
     }
     
-    // Watch for anything that indicates this sensor is a motion detector
+    //
+    // Watch for anything that indicates this sensor is a motion detector.
+    //
+
     if(state < 0x80) ds.isMotionDetector = true;
     
     // Decode motion/open bits
@@ -82,36 +74,50 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
         ds.alarm = (state & 0x20);
     }
     
-    // Decode tamper bit
+    //
+    // Decode tamper bit.
+    //
+
     ds.tamper = (state & 0x40);
     
-    // Decode battery low bit    
+    //
+    // Decode battery low bit.
+    //
+
     ds.batteryLow = (state & 0x08);
     
-    // Timestamp
+    //
+    // Timestamp.
+    //
+
     timeval now;
     gettimeofday(&now, nullptr);
     ds.lastUpdateTime = now.tv_sec;
     
     if(ds.alarm) ds.lastAlarmTime = now.tv_sec;
 
-    // Put the answer back in the map
+    //
+    // Put the answer back in the map.
+    //
+
     deviceStateMap[serial] = ds;
-    
-    // Record the current state
-    writeDeviceState();
-    
+        
+    //
     // Send the notification if something changed
+    //
+    
     if(state != ds.lastRawState)
     {
-        sendDeviceState();
+        sendDeviceState(serial, ds);
     }
+
     deviceStateMap[serial].lastRawState = state;
     
     for(const auto &dd : deviceStateMap)
     {
         printf("%sDevice %7u: %s\n",dd.first==serial ? "*" : " ", dd.first, dd.second.alarm ? "ALARM" : "OK");
     }
+
     printf("\n");
 }
 
@@ -178,8 +184,6 @@ void DigitalDecoder::handlePayload(uint64_t payload)
         printf("%u/%u packets failed CRC\n", errorCount, packetCount);
     }
 }
-
-
 
 void DigitalDecoder::handleBit(bool value)
 {

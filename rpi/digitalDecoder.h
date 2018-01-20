@@ -12,16 +12,6 @@ class DigitalDecoder
     void handleData(char data);
     
   private:
-  
-    void writeDeviceState();
-    void sendDeviceState();
-    void updateDeviceState(uint32_t serial, uint8_t state);
-    void handlePayload(uint64_t payload);
-    void handleBit(bool value);
-    void decodeBit(bool value);
-
-    unsigned int samplesSinceEdge = 0;
-    bool lastSample = false;
     
     struct deviceState_t
     {
@@ -36,6 +26,16 @@ class DigitalDecoder
         
         bool isMotionDetector;
     };
+
+    void sendDeviceState(uint32_t serial, deviceState_t ds);
+    void updateDeviceState(uint32_t serial, uint8_t state);
+    void handlePayload(uint64_t payload);
+    void handleBit(bool value);
+    void decodeBit(bool value);
+
+    unsigned int samplesSinceEdge = 0;
+    bool lastSample = false;
+    
 
     std::map<uint32_t, deviceState_t> deviceStateMap;
 };
