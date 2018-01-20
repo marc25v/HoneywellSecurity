@@ -23,6 +23,7 @@ class DigitalDecoder
         bool tamper;
         bool alarm;
         bool batteryLow;
+        bool heartbeat;
         
         bool isMotionDetector;
     };
