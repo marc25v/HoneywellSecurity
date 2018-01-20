@@ -192,11 +192,11 @@ void DigitalDecoder::handleBit(bool value)
     payload <<= 1;
     payload |= (value ? 1 : 0);
     
-//#ifdef __arm__
-//    printf("Got bit: %d, payload is now %llX\n", value?1:0, payload);
-//#else
-//    printf("Got bit: %d, payload is now %lX\n", value?1:0, payload);
-//#endif     
+#ifdef __arm__
+    printf("Got bit: %d, payload is now %llX\n", value?1:0, payload);
+#else
+    printf("Got bit: %d, payload is now %lX\n", value?1:0, payload);
+#endif     
     
     if((payload & SYNC_MASK) == SYNC_PATTERN)
     {

@@ -13,6 +13,8 @@ float magLut[0x10000];
 
 int main()
 {
+    int gain = 0;
+    
     //
     // Open the device
     //
@@ -44,18 +46,30 @@ int main()
     //
     // Set the gain
     //
-    if(rtlsdr_set_tuner_gain_mode(dev, 1) < 0)
+
+    if (gain == 0)
     {
-        std::cout << "Failed to set gain mode" << std::endl;
-        return -1;
+        if(rtlsdr_set_tuner_gain_mode(dev, 0) < 0)
+        {
+            std::cout << "Failed to set automatic gain mode" << std::endl;
+            return -1;
+        }
     }
-    
-    if(rtlsdr_set_tuner_gain(dev, 350) < 0)
+    else 
     {
-        std::cout << "Failed to set gain" << std::endl;
-        return -1;
+        if(rtlsdr_set_tuner_gain_mode(dev, 1) < 0)
+        {
+            std::cout << "Failed to set gain mode" << std::endl;
+            return -1;
+        }
+        
+        if(rtlsdr_set_tuner_gain(dev, gain) < 0)
+        {
+            std::cout << "Failed to set gain" << std::endl;
+            return -1;
+        }
     }
-    
+
     std::cout << "Successfully set gain to " << rtlsdr_get_tuner_gain(dev) << std::endl;
     
     //
