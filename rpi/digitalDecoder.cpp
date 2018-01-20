@@ -37,10 +37,10 @@ void DigitalDecoder::sendDeviceState(uint32_t serial, deviceState_t ds)
     oss << "\"heartbeat\": " << (ds.heartbeat ? "true," : "false,");
 
     time_t lastUpdateTime = (time_t)ds.lastUpdateTime;
-    oss << "\"lastUpdateTime\": " << std::put_time(std::localtime(&lastUpdateTime), "%c %Z") << ",";
+    oss << "\"lastUpdateTime\": " << std::put_time(std::localtime(&lastUpdateTime), "\"%c %Z\"") << ",";
 
     time_t lastAlarmTime = (time_t)ds.lastAlarmTime;
-    oss << "\"lastAlarmTime\": " << std::put_time(std::localtime(&lastAlarmTime), "%c %Z") << ",";
+    oss << "\"lastAlarmTime\": " << std::put_time(std::localtime(&lastAlarmTime), "\"%c %Z\"") << ",";
     oss << "}'";
 
     std::cout << oss.str() << std::endl;

@@ -3,6 +3,7 @@
         "system_error": "cpp",
         "type_traits": "cpp",
         "xfunctional": "cpp",
-        "xstddef": "cpp"
+        "xstddef": "cpp",
+        "iomanip": "cpp"
     }
 }
