@@ -24,9 +24,11 @@ void DigitalDecoder::sendDeviceState(uint32_t serial, deviceState_t ds)
     //
 
     oss << "/usr/bin/mosquitto_pub";
-    oss << " -h 172.30.32.1";
+    oss << " -h 192.168.0.35";
+    oss << " -u mqtt-alarm2";
+    oss << " -P honeywell12345!";
     oss << " -i HoneywellSecurity -r";
-    oss << " -t 'homeassistant/sensor/honeywell/" << serial << "' ";
+    oss << " -t 'ha/sensor/alarm/" << serial << "' ";
     oss << " -m '";
     oss << "{";
     oss << "\"serial\": " << serial << ",";
