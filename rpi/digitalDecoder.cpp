@@ -1,7 +1,10 @@
 #include "digitalDecoder.h"
+#include "mqtt.h"
+#include "mqtt_config.h"
 
 #include <iostream>
 #include <fstream>
+#include <string>
 #include <sstream>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -11,12 +14,132 @@
 #include <iomanip>
 #include <locale>
 #include <ctime>
+#include <csignal>
 
+// Pulse checks seem to be about 60-70 minutes apart
+#define RX_TIMEOUT_MIN      (90)
+
+// Give each sensor 3 intervals before we flag a problem
+#define SENSOR_TIMEOUT_MIN  (90*5)
 
 #define SYNC_MASK    0xFFFF000000000000ul
 #define SYNC_PATTERN 0xFFFE000000000000ul
 
-void DigitalDecoder::sendDeviceState(uint32_t serial, deviceState_t ds)
+// Don't send these messages more than once per minute unless there is a state change
+#define RX_GOOD_MIN_SEC (60)
+#define UPDATE_MIN_SEC (60)
+
+#define BASE_TOPIC "ha/sensor/alarm/"
+#define SENSOR_TOPIC BASE_TOPIC"sensor/"
+#define KEYFOB_TOPIC BASE_TOPIC"keyfob/"
+#define KEYPAD_TOPIC BASE_TOPIC"keypad/"
+
+void DigitalDecoder::setRxGood(bool state)
+{
+    std::string topic(BASE_TOPIC);
+    timeval now;
+
+    topic += "rx_status";
+
+    gettimeofday(&now, nullptr);
+
+    if (rxGood != state || (now.tv_sec - lastRxGoodUpdateTime) > RX_GOOD_MIN_SEC)
+    {
+        mqtt.send(topic.c_str(), state ? "OK" : "FAILED");
+    }
+
+    // Reset watchdog either way
+    alarm(RX_TIMEOUT_MIN*60);
+
+    rxGood = state;
+    lastRxGoodUpdateTime = now.tv_sec;
+}
+
+void DigitalDecoder::updateSensorState(uint32_t serial, uint64_t payload)
+{
+    timeval now;
+    gettimeofday(&now, nullptr);
+
+    struct sensorState_t lastState;
+    struct sensorState_t currentState;
+
+    currentState.lastUpdateTime = now.tv_sec;
+    currentState.hasLostSupervision = false;
+
+    currentState.loop1 = payload  & 0x000000800000;
+    currentState.loop2 = payload  & 0x000000200000;
+    currentState.loop3 = payload  & 0x000000100000;
+    currentState.tamper = payload & 0x000000400000;
+    currentState.lowBat = payload & 0x000000080000;
+
+    bool supervised = payload & 0x000000040000;
+    // bool repeated = payload & 0x000000020000;
+
+    //std::cout << "Payload:" << std::hex << payload << " Serial:" << std::dec << serial << std::boolalpha << " Loop1:" << currentState.loop1 << std::endl;
+
+    auto found = sensorStatusMap.find(serial);
+    if (found == sensorStatusMap.end())
+    {
+        // if there wasn't a state, make up a state that is opposite to our current state
+        // so that we send everything.
+
+        lastState.hasLostSupervision = !currentState.hasLostSupervision;
+        lastState.loop1 = !currentState.loop1;
+        lastState.loop2 = !currentState.loop2;
+        lastState.loop3 = !currentState.loop3;
+        lastState.tamper = !currentState.tamper;
+        lastState.lowBat = !currentState.lowBat;
+        lastState.lastUpdateTime = 0;
+    }
+    else
+    {
+        lastState = found->second;
+    }
+    
+    // Since the sensor will frequently blast out the same signal many times, we only want to treat
+    // the first detected signal as the supervisory signal. 
+//    bool supervised = (payload & 0x000000040000) && ((currentState.lastUpdateTime - lastState.lastUpdateTime) > 2);
+
+    if ((currentState.loop1 != lastState.loop1) || supervised)
+    {
+        std::ostringstream topic;
+        topic << SENSOR_TOPIC << serial << "/loop1";
+        mqtt.send(topic.str().c_str(), currentState.loop1 ? OPEN_SENSOR_MSG : CLOSED_SENSOR_MSG, supervised ? 0 : 1);
+    }
+
+    if ((currentState.loop2 != lastState.loop2) || supervised)
+    {
+        std::ostringstream topic;
+        topic << SENSOR_TOPIC << serial << "/loop2";
+        mqtt.send(topic.str().c_str(), currentState.loop2 ? OPEN_SENSOR_MSG : CLOSED_SENSOR_MSG, supervised ? 0 : 1);
+    }
+
+    if ((currentState.loop3 != lastState.loop3) || supervised)
+    {
+        std::ostringstream topic;
+        topic << SENSOR_TOPIC << serial << "/loop3";
+        mqtt.send(topic.str().c_str(), currentState.loop3 ? OPEN_SENSOR_MSG : CLOSED_SENSOR_MSG, supervised ? 0 : 1);
+    }
+
+    if ((currentState.tamper != lastState.tamper) || supervised)
+    {
+        std::ostringstream topic;
+        topic << SENSOR_TOPIC << serial << "/tamper";
+        mqtt.send(topic.str().c_str(), currentState.tamper ? TAMPER_MSG : UNTAMPERED_MSG, supervised ? 0 : 1);
+    }
+
+    if ((currentState.lowBat != lastState.lowBat) || supervised)
+    {
+        std::ostringstream topic;
+        topic << SENSOR_TOPIC << serial << "/battery";
+        mqtt.send(topic.str().c_str(), currentState.lowBat ? LOW_BAT_MSG : OK_BAT_MSG, supervised ? 0 : 1);
+    }
+
+    sensorStatusMap[serial] = currentState;
+}
+
+
+/*void DigitalDecoder::sendDeviceState(uint32_t serial, deviceState_t ds)
 {
     std::ostringstream oss;
     //
@@ -49,6 +172,7 @@ void DigitalDecoder::sendDeviceState(uint32_t serial, deviceState_t ds)
 
     system(oss.str().c_str());
 }
+*/
 
 void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
 {
@@ -135,6 +259,7 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
 
     printf("\n");
 }
+
 
 void DigitalDecoder::handlePayload(uint64_t payload)
 {
