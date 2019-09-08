@@ -1,6 +1,4 @@
 #include "digitalDecoder.h"
-#include "mqtt.h"
-#include "mqtt_config.h"
 
 #include <iostream>
 #include <fstream>
@@ -102,77 +100,127 @@ void DigitalDecoder::updateSensorState(uint32_t serial, uint64_t payload)
 
     if ((currentState.loop1 != lastState.loop1) || supervised)
     {
-        std::ostringstream topic;
-        topic << SENSOR_TOPIC << serial << "/loop1";
-        mqtt.send(topic.str().c_str(), currentState.loop1 ? OPEN_SENSOR_MSG : CLOSED_SENSOR_MSG, supervised ? 0 : 1);
-    }
-
-    if ((currentState.loop2 != lastState.loop2) || supervised)
-    {
-        std::ostringstream topic;
-        topic << SENSOR_TOPIC << serial << "/loop2";
-        mqtt.send(topic.str().c_str(), currentState.loop2 ? OPEN_SENSOR_MSG : CLOSED_SENSOR_MSG, supervised ? 0 : 1);
-    }
-
-    if ((currentState.loop3 != lastState.loop3) || supervised)
-    {
-        std::ostringstream topic;
-        topic << SENSOR_TOPIC << serial << "/loop3";
-        mqtt.send(topic.str().c_str(), currentState.loop3 ? OPEN_SENSOR_MSG : CLOSED_SENSOR_MSG, supervised ? 0 : 1);
-    }
-
-    if ((currentState.tamper != lastState.tamper) || supervised)
-    {
-        std::ostringstream topic;
-        topic << SENSOR_TOPIC << serial << "/tamper";
-        mqtt.send(topic.str().c_str(), currentState.tamper ? TAMPER_MSG : UNTAMPERED_MSG, supervised ? 0 : 1);
-    }
-
-    if ((currentState.lowBat != lastState.lowBat) || supervised)
-    {
-        std::ostringstream topic;
-        topic << SENSOR_TOPIC << serial << "/battery";
-        mqtt.send(topic.str().c_str(), currentState.lowBat ? LOW_BAT_MSG : OK_BAT_MSG, supervised ? 0 : 1);
-    }
-
-    sensorStatusMap[serial] = currentState;
-}
-
-
-/*void DigitalDecoder::sendDeviceState(uint32_t serial, deviceState_t ds)
-{
-    std::ostringstream oss;
-    //
-    // Use mosquitto_pub to send device state to the MQTT server.
-    //
-
+        
+        std::ostringstream oss;
     oss << "/usr/bin/mosquitto_pub";
     oss << " -h 192.168.0.35";
     oss << " -u mqtt-alarm2";
     oss << " -P honeywell54312!";
     oss << " -i HoneywellSecurity -r";
-    oss << " -t 'ha/sensor/alarm/" << serial << "' ";
+    oss << " -t 'ha/sensor/alarm/loop1/" << serial << "' ";
     oss << " -m '";
     oss << "{";
     oss << "\"serial\": " << serial << ",";
-    oss << "\"isMotion\": " << (ds.isMotionDetector ? "true," : "false,");
-    oss << "\"tamper\": " << (ds.tamper ? "true," : "false,");
-    oss << "\"alarm\": " << (ds.alarm ? "true," : "false,");
-    oss << "\"batteryLow\": " << (ds.batteryLow ? "true," : "false,");
-    oss << "\"heartbeat\": " << (ds.heartbeat ? "true," : "false,");
-
-    time_t lastUpdateTime = (time_t)ds.lastUpdateTime;
-    oss << "\"lastUpdateTime\": " << std::put_time(std::localtime(&lastUpdateTime), "\"%c %Z\"") << ",";
-
-    time_t lastAlarmTime = (time_t)ds.lastAlarmTime;
-    oss << "\"lastAlarmTime\": " << std::put_time(std::localtime(&lastAlarmTime), "\"%c %Z\"");
+    oss << "\"state\": " << (currentState.loop1 ? OPEN_SENSOR_MSG : CLOSED_SENSOR_MSG);
     oss << "}'";
 
     std::cout << oss.str() << std::endl;
 
     system(oss.str().c_str());
+        
+        /*std::ostringstream topic;
+        topic << SENSOR_TOPIC << serial << "/loop1";
+        mqtt.send(topic.str().c_str(), currentState.loop1 ? OPEN_SENSOR_MSG : CLOSED_SENSOR_MSG, supervised ? 0 : 1);
+    */
+    }
+
+    if ((currentState.loop2 != lastState.loop2) || supervised)
+    {
+          std::ostringstream oss;
+    oss << "/usr/bin/mosquitto_pub";
+    oss << " -h 192.168.0.35";
+    oss << " -u mqtt-alarm2";
+    oss << " -P honeywell54312!";
+    oss << " -i HoneywellSecurity -r";
+    oss << " -t 'ha/sensor/alarm/loop2/" << serial << "' ";
+    oss << " -m '";
+    oss << "{";
+    oss << "\"serial\": " << serial << ",";
+    oss << "\"state\": " << (currentState.loop2 ? OPEN_SENSOR_MSG : CLOSED_SENSOR_MSG);
+    oss << "}'";
+
+    std::cout << oss.str() << std::endl;
+
+    system(oss.str().c_str());
+      
+    }
+
+    if ((currentState.loop3 != lastState.loop3) || supervised)
+    {
+          std::ostringstream oss;
+    oss << "/usr/bin/mosquitto_pub";
+    oss << " -h 192.168.0.35";
+    oss << " -u mqtt-alarm2";
+    oss << " -P honeywell54312!";
+    oss << " -i HoneywellSecurity -r";
+    oss << " -t 'ha/sensor/alarm/loop3/" << serial << "' ";
+    oss << " -m '";
+    oss << "{";
+    oss << "\"serial\": " << serial << ",";
+    oss << "\"state\": " << (currentState.loop3 ? OPEN_SENSOR_MSG : CLOSED_SENSOR_MSG);
+    oss << "}'";
+
+    std::cout << oss.str() << std::endl;
+
+    system(oss.str().c_str());
+      
+    }
+
+    if ((currentState.tamper != lastState.tamper) || supervised)
+    {
+     
+    std::ostringstream oss;
+    oss << "/usr/bin/mosquitto_pub";
+    oss << " -h 192.168.0.35";
+    oss << " -u mqtt-alarm2";
+    oss << " -P honeywell54312!";
+    oss << " -i HoneywellSecurity -r";
+    oss << " -t 'ha/sensor/alarm/tamper/" << serial << "' ";
+    oss << " -m '";
+    oss << "{";
+    oss << "\"serial\": " << serial << ",";
+    oss << "\"state\": " << (currentState.tamper ? TAMPER_MSG : UNTAMPERED_MSG);
+    oss << "}'";
+
+    std::cout << oss.str() << std::endl;
+
+    system(oss.str().c_str());
+        
+       /* 
+        std::ostringstream topic;
+        topic << SENSOR_TOPIC << serial << "/tamper";
+        mqtt.send(topic.str().c_str(), currentState.tamper ? TAMPER_MSG : UNTAMPERED_MSG, supervised ? 0 : 1);
+    */
+    }
+
+    if ((currentState.lowBat != lastState.lowBat) || supervised)
+    {
+     std::ostringstream oss;
+    oss << "/usr/bin/mosquitto_pub";
+    oss << " -h 192.168.0.35";
+    oss << " -u mqtt-alarm2";
+    oss << " -P honeywell54312!";
+    oss << " -i HoneywellSecurity -r";
+    oss << " -t 'ha/sensor/alarm/battery/" << serial << "' ";
+    oss << " -m '";
+    oss << "{";
+    oss << "\"serial\": " << serial << ",";
+    oss << "\"state\": " << (currentState.lowBat ? LOW_BAT_MSG : OK_BAT_MSG);
+    oss << "}'";
+
+    std::cout << oss.str() << std::endl;
+
+    system(oss.str().c_str());
+        /*
+        std::ostringstream topic;
+        topic << SENSOR_TOPIC << serial << "/battery";
+        mqtt.send(topic.str().c_str(), currentState.lowBat ? LOW_BAT_MSG : OK_BAT_MSG, supervised ? 0 : 1);
+    */
+    }
+
+    sensorStatusMap[serial] = currentState;
 }
-*/
+
 
 void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
 {
