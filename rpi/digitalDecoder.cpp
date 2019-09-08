@@ -43,7 +43,22 @@ void DigitalDecoder::setRxGood(bool state)
 
     if (rxGood != state || (now.tv_sec - lastRxGoodUpdateTime) > RX_GOOD_MIN_SEC)
     {
-        mqtt.send(topic.c_str(), state ? "OK" : "FAILED");
+              std::ostringstream oss;
+    oss << "/usr/bin/mosquitto_pub";
+    oss << " -h 192.168.0.35";
+    oss << " -u mqtt-alarm2";
+    oss << " -P honeywell54312!";
+    oss << " -i HoneywellSecurity -r";
+    oss << " -t '" << topic.c_str() << "' ";
+    oss << " -m '";
+    oss << "{";
+    oss << "\"state\": " << (state ? "OK" : "FAILED");
+    oss << "}'";
+
+    std::cout << oss.str() << std::endl;
+
+    system(oss.str().c_str());
+        
     }
 
     // Reset watchdog either way
