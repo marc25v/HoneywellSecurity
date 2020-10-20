@@ -32,7 +32,7 @@ class DigitalDecoder
         bool isMotionDetector;
     };
 
-    void sendDeviceState(uint32_t serial, deviceState_t ds);
+    //void sendDeviceState(uint32_t serial, deviceState_t ds);
     void updateDeviceState(uint32_t serial, uint8_t state);
     void writeDeviceState();
     void sendDeviceState();
