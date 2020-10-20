@@ -39,6 +39,40 @@
 #define LOW_BAT_MSG "LOW"
 #define OK_BAT_MSG "OK"
 
+void DigitalDecoder::sendDeviceState(uint32_t serial, deviceState_t ds)
+{
+    std::ostringstream oss;
+    //
+    // Use mosquitto_pub to send device state to the MQTT server.
+    //
+
+    oss << "/usr/bin/mosquitto_pub";
+    oss << " -h 192.168.1.52";
+    oss << " -u mqtt-alarm2";
+    oss << " -P honeywell54312!";
+    oss << " -i HoneywellSecurity -r";
+    oss << " -t '" << topic.c_str() << "' ";
+    oss << " -m '";   
+    oss << "{";
+    oss << "\"serial\": " << serial << ",";
+    oss << "\"isMotion\": " << (ds.isMotionDetector ? "true," : "false,");
+    oss << "\"tamper\": " << (ds.tamper ? "true," : "false,");
+    oss << "\"alarm\": " << (ds.alarm ? "true," : "false,");
+    oss << "\"batteryLow\": " << (ds.batteryLow ? "true," : "false,");
+    oss << "\"heartbeat\": " << (ds.heartbeat ? "true," : "false,");
+
+    time_t lastUpdateTime = (time_t)ds.lastUpdateTime;
+    oss << "\"lastUpdateTime\": " << std::put_time(std::localtime(&lastUpdateTime), "\"%c %Z\"") << ",";
+
+    time_t lastAlarmTime = (time_t)ds.lastAlarmTime;
+    oss << "\"lastAlarmTime\": " << std::put_time(std::localtime(&lastAlarmTime), "\"%c %Z\"");
+    oss << "}'";
+
+    std::cout << oss.str() << std::endl;
+
+    system(oss.str().c_str());
+}
+
 void DigitalDecoder::setRxGood(bool state)
 {
     std::string topic(BASE_TOPIC);
