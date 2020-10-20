@@ -51,7 +51,7 @@ void DigitalDecoder::sendDeviceState(uint32_t serial, deviceState_t ds)
     oss << " -u mqtt-alarm2";
     oss << " -P honeywell54312!";
     oss << " -i HoneywellSecurity -r";
-    oss << " -t '" << topic.c_str() << "' ";
+    oss << " -t 'ha/sensor/alarm/" << serial << "' ";
     oss << " -m '";   
     oss << "{";
     oss << "\"serial\": " << serial << ",";
