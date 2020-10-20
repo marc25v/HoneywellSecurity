@@ -318,7 +318,7 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
     if(state != ds.lastRawState)
     {
         //Update 2020:  Commented this out to build successfully.
-        //sendDeviceState(serial, ds);
+        sendDeviceState(serial, ds);
     }
 
     deviceStateMap[serial].lastRawState = state;
