@@ -32,12 +32,12 @@
 #define KEYFOB_TOPIC BASE_TOPIC"keyfob/"
 #define KEYPAD_TOPIC BASE_TOPIC"keypad/"
 //UPDATE 2020:  Defining
-#define OPEN_SENSOR_MSG "OPEN_SENSOR_MSG"
-#define CLOSED_SENSOR_MSG "CLOSED_SENSOR_MSG"
-#define TAMPER_MSG "TAMPER_MSG"
-#define UNTAMPERED_MSG "UNTAMPERED_MSG"
-#define LOW_BAT_MSG "LOW_BAT_MSG"
-#define OK_BAT_MSG "OK_BAT_MSG"
+#define OPEN_SENSOR_MSG "OPEN"
+#define CLOSED_SENSOR_MSG "CLOSED"
+#define TAMPER_MSG "TAMPER"
+#define UNTAMPERED_MSG "OK"
+#define LOW_BAT_MSG "LOW"
+#define OK_BAT_MSG "OK"
 
 void DigitalDecoder::setRxGood(bool state)
 {
