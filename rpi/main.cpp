@@ -35,7 +35,7 @@ int main()
     //
     // Set the frequency
     //
-    if(rtlsdr_set_center_freq(dev, 344940000) < 0)
+    if(rtlsdr_set_center_freq(dev, 345000000) < 0)
     {
         std::cout << "Failed to set frequency" << std::endl;
         return -1;
