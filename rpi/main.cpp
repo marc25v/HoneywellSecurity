@@ -13,7 +13,7 @@ float magLut[0x10000];
 
 int main()
 {
-    int gain = 10;
+    int gain = 0;
     
     //
     // Open the device
@@ -35,7 +35,7 @@ int main()
     //
     // Set the frequency
     //
-    if(rtlsdr_set_center_freq(dev, 345000000) < 0)
+    if(rtlsdr_set_center_freq(dev, 345020000) < 0)
     {
         std::cout << "Failed to set frequency" << std::endl;
         return -1;
