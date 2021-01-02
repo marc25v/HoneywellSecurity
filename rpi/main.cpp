@@ -75,8 +75,8 @@ int main()
     //
     // Set the sample rate
     //
-   //if(rtlsdr_set_sample_rate(dev, 1000000) < 0)
-    if(rtlsdr_set_sample_rate(dev, 250000) < 0)
+   if(rtlsdr_set_sample_rate(dev, 1000000) < 0)
+   // if(rtlsdr_set_sample_rate(dev, 250000) < 0)
     {
         std::cout << "Failed to set sample rate" << std::endl;
         return -1;
