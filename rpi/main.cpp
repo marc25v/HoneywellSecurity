@@ -13,7 +13,7 @@ float magLut[0x10000];
 
 int main()
 {
-    int gain = 364;
+    int gain = 36.4;
     
     //
     // Open the device
