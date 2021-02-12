@@ -47,7 +47,7 @@ void DigitalDecoder::sendDeviceState(uint32_t serial, deviceState_t ds)
     //
 
     oss << "/usr/bin/mosquitto_pub";
-    oss << " -h 192.168.0.100";
+    oss << " -h 192.168.0.35";
     oss << " -u mqtt-alarm2";
     oss << " -P honeywell54312!";
     oss << " -i HoneywellSecurity -r";
@@ -86,7 +86,7 @@ void DigitalDecoder::setRxGood(bool state)
     {
               std::ostringstream oss;
     oss << "/usr/bin/mosquitto_pub";
-    oss << " -h 192.168.0.100";
+    oss << " -h 192.168.0.35";
     oss << " -u mqtt-alarm2";
     oss << " -P honeywell54312!";
     oss << " -i HoneywellSecurity -r";
@@ -159,7 +159,7 @@ void DigitalDecoder::updateSensorState(uint32_t serial, uint64_t payload)
         
         std::ostringstream oss;
     oss << "/usr/bin/mosquitto_pub";
-    oss << " -h 192.168.0.100";
+    oss << " -h 192.168.0.35";
     oss << " -u mqtt-alarm2";
     oss << " -P honeywell54312!";
     oss << " -i HoneywellSecurity -r";
@@ -184,7 +184,7 @@ void DigitalDecoder::updateSensorState(uint32_t serial, uint64_t payload)
     {
           std::ostringstream oss;
     oss << "/usr/bin/mosquitto_pub";
-    oss << " -h 192.168.0.100";
+    oss << " -h 192.168.0.35";
     oss << " -u mqtt-alarm2";
     oss << " -P honeywell54312!";
     oss << " -i HoneywellSecurity -r";
@@ -205,7 +205,7 @@ void DigitalDecoder::updateSensorState(uint32_t serial, uint64_t payload)
     {
           std::ostringstream oss;
     oss << "/usr/bin/mosquitto_pub";
-    oss << " -h 192.168.0.100";
+    oss << " -h 192.168.0.35";
     oss << " -u mqtt-alarm2";
     oss << " -P honeywell54312!";
     oss << " -i HoneywellSecurity -r";
@@ -227,7 +227,7 @@ void DigitalDecoder::updateSensorState(uint32_t serial, uint64_t payload)
      
     std::ostringstream oss;
     oss << "/usr/bin/mosquitto_pub";
-    oss << " -h 192.168.0.100";
+    oss << " -h 192.168.0.35";
     oss << " -u mqtt-alarm2";
     oss << " -P honeywell54312!";
     oss << " -i HoneywellSecurity -r";
@@ -253,7 +253,7 @@ void DigitalDecoder::updateSensorState(uint32_t serial, uint64_t payload)
     {
      std::ostringstream oss;
     oss << "/usr/bin/mosquitto_pub";
-    oss << " -h 192.168.0.100";
+    oss << " -h 192.168.0.35";
     oss << " -u mqtt-alarm2";
     oss << " -P honeywell54312!";
     oss << " -i HoneywellSecurity -r";
